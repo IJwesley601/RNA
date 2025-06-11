@@ -28,6 +28,8 @@ export default function EstimatePage() {
     balcony: "",
     floor: "",
     elevator: "",
+    latitude: null,
+    longitude: null
   })
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -51,9 +53,28 @@ export default function EstimatePage() {
 
   const handleSubmit = async () => {
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    router.push("/results")
+    
+    try {
+      // Géocodage de l'adresse
+      const geocodeResponse = await fetch(`http://localhost:8000/geocode?address=${encodeURIComponent(formData.address)}`)
+      if (!geocodeResponse.ok) {
+        throw new Error('Erreur lors du géocodage')
+      }
+      const { latitude, longitude } = await geocodeResponse.json()
+      
+      // Mettre à jour les coordonnées
+      setFormData(prev => ({ ...prev, latitude, longitude }))
+      
+      // Rediriger vers la page de résultats avec les données
+      router.push(`/results?propertyData=${encodeURIComponent(JSON.stringify({
+        ...formData,
+        latitude,
+        longitude
+      }))}`)
+    } catch (err) {
+      console.error('Erreur:', err)
+      setIsLoading(false)
+    }
   }
 
   const updateFormData = (field: string, value: any) => {
@@ -364,7 +385,7 @@ export default function EstimatePage() {
                   variant="outline"
                   onClick={handlePrevious}
                   disabled={currentStep === 1}
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-white/20 text-black hover:bg-white/10"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Précédent

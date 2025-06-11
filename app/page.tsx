@@ -30,9 +30,6 @@ export default function HomePage() {
               <a href="#testimonials" className="text-white/80 hover:text-white transition-colors">
                 Témoignages
               </a>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                Connexion
-              </Button>
             </div>
           </div>
         </div>
@@ -71,13 +68,6 @@ export default function HomePage() {
                   />
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-white/20 text-white hover:bg-white/10 px-8 py-4 text-lg"
-              >
-                Voir une démo
-              </Button>
             </div>
 
             {/* Stats */}
