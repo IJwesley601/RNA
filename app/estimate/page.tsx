@@ -214,6 +214,25 @@ export default function EstimatePage() {
                     </div>
 
                     <div>
+                      <Label htmlFor="rooms" className="text-white mb-2 block">
+                        Nombre d'étages
+                      </Label>
+                      <Select value={formData.floor} onValueChange={(value) => updateFormData("floor", value)}>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                          <SelectValue placeholder="Sélectionnez" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="4">4</SelectItem>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="6+">6+ </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
                       <Label htmlFor="bedrooms" className="text-white mb-2 block">
                         Chambres
                       </Label>
@@ -358,6 +377,10 @@ export default function EstimatePage() {
                       <div>
                         <span className="text-white/60">Pièces:</span>
                         <p className="text-white font-medium">{formData.rooms || "Non renseigné"}</p>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Etages:</span>
+                        <p className="text-white font-medium">{formData.floor || "Non renseigné"}</p>
                       </div>
                       <div>
                         <span className="text-white/60">Année:</span>

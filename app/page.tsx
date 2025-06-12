@@ -27,14 +27,13 @@ export default function HomePage() {
               <a href="#how-it-works" className="text-white/80 hover:text-white transition-colors">
                 Comment ça marche
               </a>
-              <a href="#testimonials" className="text-white/80 hover:text-white transition-colors">
+              {/* <a href="#testimonials" className="text-white/80 hover:text-white transition-colors">
                 Témoignages
-              </a>
+              </a> */}
             </div>
           </div>
         </div>
       </nav>
-
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -46,7 +45,7 @@ export default function HomePage() {
               Estimez votre bien
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 {" "}
-                en 30 secondes
+                en moins de 30 secondes
               </span>
             </h1>
             <p className="text-xl text-white/80 mb-10 max-w-3xl mx-auto leading-relaxed">
@@ -176,7 +175,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">Ce que disent nos utilisateurs</h2>
@@ -229,7 +228,7 @@ export default function HomePage() {
             </Card>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-purple-600/20 to-pink-600/20">
