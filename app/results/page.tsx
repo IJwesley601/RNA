@@ -63,7 +63,7 @@ interface PropertyDetails {
 }
 
 const useCurrencyConverter = () => {
-  const [rate, setRate] = useState<number | null>(null);
+  const [rate, setRate] = useState<number | null>(null); // Taux MGA -> EUR
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,13 +74,16 @@ const useCurrencyConverter = () => {
           "https://v6.exchangerate-api.com/v6/9a7414de33f741e1facc43c3/latest/EUR"
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch exchange rate");
+          throw new Error("Échec de la récupération du taux de change");
         }
         const data = await response.json();
-        setRate(data.conversion_rates.MGA);
+        setRate(data.conversion_rates.MGA); // Récupère le taux EUR -> MGA
       } catch (err) {
-        console.error("Error fetching exchange rate:", err);
-        setError(err instanceof Error ? err.message : "Unknown error");
+        console.error(
+          "Erreur lors de la récupération du taux de change :",
+          err
+        );
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
       } finally {
         setLoading(false);
       }
@@ -89,12 +92,15 @@ const useCurrencyConverter = () => {
     fetchExchangeRate();
   }, []);
 
-  const convertToMGA = (eur: number): string => {
+  const convertToEUR = (mga: number): string => {
     if (rate === null) return "...";
-    return Math.round(eur * rate).toLocaleString("fr-FR");
+    return (mga / rate).toLocaleString("fr-FR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
-  return { convertToMGA, loading, error, rate };
+  return { convertToEUR, loading, error, rate };
 };
 
 export default function ResultsPage() {
@@ -108,7 +114,7 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const {
-    convertToMGA,
+    convertToEUR,
     loading: rateLoading,
     error: rateError,
     rate,
@@ -125,18 +131,28 @@ export default function ResultsPage() {
           throw new Error("Données du bien manquantes");
         }
 
-        const parsedPropertyData = JSON.parse(
-          decodeURIComponent(propertyDataParam)
-        );
+        let parsedPropertyData;
+        try {
+          parsedPropertyData = JSON.parse(
+            decodeURIComponent(propertyDataParam)
+          );
+        } catch (err) {
+          throw new Error("Erreur de formatage des données du bien");
+        }
+
         setPropertyDetails({
           address: parsedPropertyData.address,
           property_type: parsedPropertyData.propertyType,
-          surface: parsedPropertyData.surface[0],
+          surface: Array.isArray(parsedPropertyData.surface)
+            ? parsedPropertyData.surface[0]
+            : parsedPropertyData.surface,
           rooms: parsedPropertyData.rooms,
           floor: parsedPropertyData.floor,
           bedrooms: parsedPropertyData.bedrooms,
           bathrooms: parsedPropertyData.bathrooms,
-          year: parsedPropertyData.year[0],
+          year: Array.isArray(parsedPropertyData.year)
+            ? parsedPropertyData.year[0]
+            : parsedPropertyData.year,
           condition: parsedPropertyData.condition,
           parking: parsedPropertyData.parking,
           garden: parsedPropertyData.garden,
@@ -150,12 +166,16 @@ export default function ResultsPage() {
           body: JSON.stringify({
             address: parsedPropertyData.address,
             property_type: parsedPropertyData.propertyType,
-            surface: parsedPropertyData.surface[0],
-            rooms: parseInt(parsedPropertyData.rooms),
-            floor: parseInt(parsedPropertyData.floor),
-            bedrooms: parseInt(parsedPropertyData.bedrooms),
-            bathrooms: parseInt(parsedPropertyData.bathrooms),
-            year: parsedPropertyData.year[0],
+            surface: Array.isArray(parsedPropertyData.surface)
+              ? parsedPropertyData.surface[0]
+              : parsedPropertyData.surface,
+            rooms: parseInt(parsedPropertyData.rooms, 10),
+            floor: parseInt(parsedPropertyData.floor, 10),
+            bedrooms: parseInt(parsedPropertyData.bedrooms, 10),
+            bathrooms: parseInt(parsedPropertyData.bathrooms, 10),
+            year: Array.isArray(parsedPropertyData.year)
+              ? parsedPropertyData.year[0]
+              : parsedPropertyData.year,
             condition: parsedPropertyData.condition,
             parking: parsedPropertyData.parking,
             garden: parsedPropertyData.garden,
@@ -165,7 +185,13 @@ export default function ResultsPage() {
         });
 
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des données");
+          const errorText = await response.text();
+          console.error("Erreur backend:", response.status, errorText);
+          throw new Error(
+            `Erreur lors de la récupération des données: ${
+              errorText || response.statusText
+            }`
+          );
         }
 
         const data = await response.json();
@@ -182,6 +208,10 @@ export default function ResultsPage() {
 
     fetchEstimation();
   }, [propertyDataParam]);
+
+  const formatMGA = (value: number): string => {
+    return value.toLocaleString("fr-FR");
+  };
 
   const generatePDF = () => {
     if (!estimationData || !propertyDetails || !rate) return;
@@ -247,15 +277,24 @@ export default function ResultsPage() {
       body: [
         [
           "Estimation moyenne",
-          `${convertToMGA(estimationData.estimated_price)} MGA`,
+          `${formatMGA(estimationData.estimated_price)} MGA (${convertToEUR(
+            estimationData.estimated_price
+          )} €)`,
         ],
         [
           "Fourchette de prix",
-          `${convertToMGA(estimationData.price_min)} MGA - ${convertToMGA(
+          `${formatMGA(estimationData.price_min)} MGA - ${formatMGA(
             estimationData.price_max
-          )} MGA`,
+          )} MGA (${convertToEUR(estimationData.price_min)} € - ${convertToEUR(
+            estimationData.price_max
+          )} €)`,
         ],
-        ["Prix au m²", `${convertToMGA(estimationData.price_per_sqm)} MGA/m²`],
+        [
+          "Prix au m²",
+          `${formatMGA(estimationData.price_per_sqm)} MGA/m² (${convertToEUR(
+            estimationData.price_per_sqm
+          )} €/m²)`,
+        ],
         ["Niveau de confiance", `${estimationData.confidence_score}%`],
       ],
       theme: "plain",
@@ -275,7 +314,7 @@ export default function ResultsPage() {
       head: [["Mois", "Prix moyen (MGA)"]],
       body: estimationData.market_trends.map((trend) => [
         trend.month,
-        convertToMGA(trend.price),
+        `${formatMGA(trend.price)} MGA (${convertToEUR(trend.price)} €)`,
       ]),
       theme: "grid",
       headStyles: {
@@ -294,7 +333,7 @@ export default function ResultsPage() {
       head: [["Adresse", "Prix (MGA)", "Surface", "Date"]],
       body: estimationData.comparable_properties.map((prop) => [
         prop.address,
-        convertToMGA(prop.price),
+        `${formatMGA(prop.price)} MGA (${convertToEUR(prop.price)} €)`,
         `${prop.surface} m²`,
         new Date(prop.sold_date).toLocaleDateString("fr-FR"),
       ]),
@@ -412,9 +451,9 @@ export default function ResultsPage() {
     return null;
   }
 
-  const marketDataInMGA = estimationData.market_trends.map((item) => ({
+  const marketData = estimationData.market_trends.map((item) => ({
     month: item.month,
-    price: Math.round(item.price * rate),
+    price: item.price,
   }));
 
   return (
@@ -464,8 +503,8 @@ export default function ResultsPage() {
                 confiance de {estimationData.confidence_score}%
               </p>
               <p className="text-black/60 text-sm mt-1">
-                Taux de change: 1€ = {Math.round(rate)} MGA. Valeur extraite
-                depuis "exchangerate-api"
+                Taux de change: 1 € = {(rate || 0).toFixed(6)} MGA. Valeur
+                extraite depuis "exchangerate-api"
               </p>
             </div>
           </div>
@@ -481,14 +520,17 @@ export default function ResultsPage() {
                   Estimation IA • Confiance {estimationData.confidence_score}%
                 </Badge>
                 <div className="text-5xl font-bold text-white mb-2">
-                  {convertToMGA(estimationData.estimated_price)} MGA
+                  {formatMGA(estimationData.estimated_price)} MGA
+                </div>
+                <div className="text-2xl text-white mb-2">
+                  soit {convertToEUR(estimationData.estimated_price)} €
                 </div>
                 <div className="text-white/70 text-lg">
-                  Fourchette: {convertToMGA(estimationData.price_min)} MGA -{" "}
-                  {convertToMGA(estimationData.price_max)} MGA
+                  Fourchette: {formatMGA(estimationData.price_min)} MGA -{" "}
+                  {formatMGA(estimationData.price_max)} MGA
                 </div>
                 <div className="text-white/60 mt-2">
-                  Soit {convertToMGA(estimationData.price_per_sqm)} MGA/m²
+                  Soit {formatMGA(estimationData.price_per_sqm)} MGA/m²
                 </div>
               </div>
 
@@ -524,10 +566,10 @@ export default function ResultsPage() {
                   Marché
                 </TabsTrigger>
                 <TabsTrigger
-                  value="comparables"
+                  value="price-ranges"
                   className="data-[state=active]:bg-white/20 text-white"
                 >
-                  Comparables
+                  Fourchettes de prix du m²
                 </TabsTrigger>
               </TabsList>
 
@@ -541,7 +583,10 @@ export default function ResultsPage() {
                       <div className="bg-white/5 rounded-lg p-4">
                         <div className="text-white/60 text-sm">Prix au m²</div>
                         <div className="text-2xl font-bold text-white">
-                          {convertToMGA(estimationData.price_per_sqm)} MGA
+                          {formatMGA(estimationData.price_per_sqm)} MGA{" "}
+                          <p className="text-lg">
+                            soit {convertToEUR(estimationData.price_per_sqm)} €
+                          </p>
                         </div>
                       </div>
                       <div className="bg-white/5 rounded-lg p-4">
@@ -604,7 +649,7 @@ export default function ResultsPage() {
                   </h3>
                   <div className="h-64 mb-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={marketDataInMGA}>
+                      <LineChart data={marketData}>
                         <CartesianGrid
                           strokeDasharray="3 3"
                           stroke="#ffffff20"
@@ -612,7 +657,12 @@ export default function ResultsPage() {
                         <XAxis dataKey="month" stroke="#ffffff80" />
                         <YAxis stroke="#ffffff80" />
                         <Tooltip
-                          formatter={(value) => [`${value} MGA`, "Prix"]}
+                          formatter={(value: number) => [
+                            `${formatMGA(value)} MGA (${convertToEUR(
+                              value
+                            )} €)`,
+                            "Prix",
+                          ]}
                           labelFormatter={(label) => `Mois: ${label}`}
                           contentStyle={{
                             backgroundColor: "rgba(15, 23, 42, 0.9)",
@@ -637,9 +687,9 @@ export default function ResultsPage() {
                       <div className="text-2xl font-bold text-green-400">
                         +
                         {(
-                          ((marketDataInMGA[marketDataInMGA.length - 1].price -
-                            marketDataInMGA[0].price) /
-                            marketDataInMGA[0].price) *
+                          ((marketData[marketData.length - 1].price -
+                            marketData[0].price) /
+                            marketData[0].price) *
                           100
                         ).toFixed(1)}
                         %
@@ -650,7 +700,7 @@ export default function ResultsPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-400">
-                        {convertToMGA(estimationData.price_per_sqm)} MGA
+                        {formatMGA(estimationData.price_per_sqm)} MGA
                       </div>
                       <div className="text-white/60 text-sm">Prix moyen/m²</div>
                     </div>
@@ -666,45 +716,154 @@ export default function ResultsPage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="comparables" className="mt-6">
+              <TabsContent value="price-ranges" className="mt-6">
                 <Card className="bg-white/10 backdrop-blur-md border-white/20 p-6">
                   <h3 className="text-xl font-semibold text-white mb-4">
-                    Ventes comparables récentes
+                    Fourchettes de prix par du m² quartier
                   </h3>
-                  <div className="space-y-4">
-                    {estimationData.comparable_properties.map(
-                      (property, index) => (
-                        <div key={index} className="bg-white/5 rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <div className="text-white font-medium">
-                                {property.address}
-                              </div>
-                              <div className="text-white/60 text-sm">
-                                Vendu le{" "}
-                                {new Date(
-                                  property.sold_date
-                                ).toLocaleDateString("fr-FR")}
-                              </div>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className="border-white/20 text-white"
-                            >
-                              {property.surface} m²
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="text-lg font-semibold text-white">
-                              {convertToMGA(property.price)} MGA
-                            </div>
-                            <div className="text-white/70">
-                              {convertToMGA(property.price_per_sqm)} MGA/m²
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )}
+                  <div className="overflow-y-auto max-h-96">
+                    <table className="w-full text-white">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-purple-600 to-pink-600 sticky top-0">
+                          <th className="p-2 text-left">Quartier</th>
+                          <th className="p-2 text-right">
+                            Fourchette de prix (MGA)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2 font-bold text-purple-300">
+                            Centre-ville & quartiers haut de gamme
+                          </td>
+                          <td></td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Analakely</td>
+                          <td className="p-2 text-right">
+                            300 000 – 1 000 000
+                          </td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Antaninarenina</td>
+                          <td className="p-2 text-right">
+                            300 000 – 1 000 000
+                          </td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Isoraka</td>
+                          <td className="p-2 text-right">
+                            300 000 – 1 000 000
+                          </td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambatonakanga</td>
+                          <td className="p-2 text-right">300 000 – 800 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ankadifotsy</td>
+                          <td className="p-2 text-right">250 000 – 700 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Tsaralalana</td>
+                          <td className="p-2 text-right">300 000 – 600 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2 font-bold text-purple-300">
+                            Quartiers résidentiels proches
+                          </td>
+                          <td></td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ivandry</td>
+                          <td className="p-2 text-right">200 000 – 500 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambohipo</td>
+                          <td className="p-2 text-right">150 000 – 300 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambatoroka</td>
+                          <td className="p-2 text-right">60 000 – 150 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambohijatovo</td>
+                          <td className="p-2 text-right">150 000 – 250 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ankadivato</td>
+                          <td className="p-2 text-right">200 000 – 350 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ampasampito</td>
+                          <td className="p-2 text-right">150 000 – 300 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2 font-bold text-purple-300">
+                            Banlieues et zones en expansion
+                          </td>
+                          <td></td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ivato</td>
+                          <td className="p-2 text-right">100 000 – 250 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Talatamaty</td>
+                          <td className="p-2 text-right">80 000 – 150 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Tanjombato</td>
+                          <td className="p-2 text-right">70 000 – 120 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambohidratrimo</td>
+                          <td className="p-2 text-right">50 000 – 120 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambohimalaza</td>
+                          <td className="p-2 text-right">30 000 – 100 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Anosizato</td>
+                          <td className="p-2 text-right">70 000 – 150 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Andoharanofotsy</td>
+                          <td className="p-2 text-right">60 000 – 130 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2 font-bold text-purple-300">
+                            Zones périphériques et rurales
+                          </td>
+                          <td></td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Alakamisy-Ambohidratrimo</td>
+                          <td className="p-2 text-right">4 000 – 20 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Anjeva Gara</td>
+                          <td className="p-2 text-right">10 000 – 30 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Moramanga</td>
+                          <td className="p-2 text-right">3 000 – 15 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Manjakandriana</td>
+                          <td className="p-2 text-right">5 000 – 25 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Ambatomirahavavy</td>
+                          <td className="p-2 text-right">40 000 – 60 000</td>
+                        </tr>
+                        <tr className="bg-white/10 hover:bg-white/20">
+                          <td className="p-2">Anosiala</td>
+                          <td className="p-2 text-right">5 000 – 30 000</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </Card>
               </TabsContent>
@@ -791,28 +950,26 @@ export default function ResultsPage() {
                 <div className="text-white/70 text-sm">
                   Le secteur affiche une croissance de{" "}
                   {(
-                    ((marketDataInMGA[marketDataInMGA.length - 1].price -
-                      marketDataInMGA[0].price) /
-                      marketDataInMGA[0].price) *
+                    ((marketData[marketData.length - 1].price -
+                      marketData[0].price) /
+                      marketData[0].price) *
                     100
                   ).toFixed(1)}
                   % sur 6 mois.
-                  {marketDataInMGA[marketDataInMGA.length - 1].price >
-                  marketDataInMGA[0].price
+                  {marketData[marketData.length - 1].price > marketData[0].price
                     ? " C'est le moment idéal pour vendre."
                     : " Le marché est en baisse, envisagez d'attendre."}
                 </div>
                 <Badge
                   className={
-                    marketDataInMGA[marketDataInMGA.length - 1].price >
-                    marketDataInMGA[0].price
+                    marketData[marketData.length - 1].price >
+                    marketData[0].price
                       ? "bg-green-500/20 text-green-400 border-green-500/30"
                       : "bg-red-500/20 text-red-400 border-red-500/30"
                   }
                 >
                   Recommandation:{" "}
-                  {marketDataInMGA[marketDataInMGA.length - 1].price >
-                  marketDataInMGA[0].price
+                  {marketData[marketData.length - 1].price > marketData[0].price
                     ? "Vendre maintenant"
                     : "Attendre une meilleure période"}
                 </Badge>
