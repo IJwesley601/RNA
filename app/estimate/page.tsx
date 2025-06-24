@@ -56,7 +56,7 @@ export default function EstimatePage() {
     
     try {
       // Géocodage de l'adresse
-      const geocodeResponse = await fetch(`https://rna-back.onrender.com/geocode?address=${encodeURIComponent(formData.address)}`)
+      const geocodeResponse = await fetch(`http://localhost:8000/geocode?address=${encodeURIComponent(formData.address)}`)
       if (!geocodeResponse.ok) {
         throw new Error('Erreur lors du géocodage')
       }
