@@ -135,11 +135,11 @@ export default function EstimatePage() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="address" className="text-white mb-2 block">
-                        Adresse complète
+                        Quartier
                       </Label>
                       <Input
                         id="address"
-                        placeholder="Ex: 123 Rue de la Paix, 75001 Paris"
+                        placeholder="Ex: Analakely"
                         value={formData.address}
                         onChange={(e) => updateFormData("address", e.target.value)}
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"

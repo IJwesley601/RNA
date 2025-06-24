@@ -45,7 +45,7 @@ export default function HomePage() {
               Estimez votre bien
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 {" "}
-                en moins de 30 secondes
+                en quelques secondes
               </span>
             </h1>
             <p className="text-xl text-white/80 mb-10 max-w-3xl mx-auto leading-relaxed">
@@ -70,7 +70,7 @@ export default function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               <div className="text-center">
                 <div className="text-3xl font-bold text-white mb-2">50K+</div>
                 <div className="text-white/60">Transactions analysées</div>
@@ -83,7 +83,7 @@ export default function HomePage() {
                 <div className="text-3xl font-bold text-white mb-2">30s</div>
                 <div className="text-white/60">Temps d'estimation</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -105,7 +105,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">Estimation Instantanée</h3>
               <p className="text-white/70">
-                Obtenez une estimation précise en moins de 30 secondes grâce à notre IA avancée.
+                Obtenez une estimation précise en moins quelques secondes grâce à notre IA avancée.
               </p>
             </Card>
 
@@ -125,7 +125,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">Données Sécurisées</h3>
               <p className="text-white/70">
-                Vos informations sont protégées et conformes au RGPD. Confidentialité garantie.
+                Vos informations sont protégées. Confidentialité garantie.
               </p>
             </Card>
           </div>
@@ -234,9 +234,6 @@ export default function HomePage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-purple-600/20 to-pink-600/20">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Prêt à estimer votre bien ?</h2>
-          <p className="text-xl text-white/80 mb-8">
-            Rejoignez des milliers d'utilisateurs qui font confiance à EstimPro
-          </p>
           <Link href="/estimate">
             <Button
               size="lg"
@@ -313,16 +310,11 @@ export default function HomePage() {
                     CGU
                   </a>
                 </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    RGPD
-                  </a>
-                </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/60">
-            <p>&copy; 2024 EstimPro. Tous droits réservés.</p>
+            <p>&copy; 2025 EstimPro. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
