@@ -158,7 +158,7 @@ export default function ResultsPage() {
           garden: parsedPropertyData.garden,
         });
 
-        const response = await fetch("http://localhost:8000/estimate", {
+        const response = await fetch("https://rna-back.onrender.com/estimate", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
