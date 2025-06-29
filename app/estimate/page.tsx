@@ -1,22 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, ArrowRight, Home, MapPin, Building, Ruler, Sparkles } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Home,
+  MapPin,
+  Building,
+  Ruler,
+  Sparkles,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function EstimatePage() {
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     address: "",
-    propertyType: "",
+    propertyType: "house",
     surface: [100],
     rooms: "",
     bedrooms: "",
@@ -29,57 +43,65 @@ export default function EstimatePage() {
     floor: "",
     elevator: "",
     latitude: null,
-    longitude: null
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+    longitude: null,
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const totalSteps = 4
-  const progress = (currentStep / totalSteps) * 100
+  const totalSteps = 4;
+  const progress = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     } else {
-      handleSubmit()
+      handleSubmit();
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    setIsLoading(true)
-    
+    setIsLoading(true);
+
     try {
       // Géocodage de l'adresse
-      const geocodeResponse = await fetch(`http://localhost:8000/geocode?address=${encodeURIComponent(formData.address)}`)
+      const geocodeResponse = await fetch(
+        `http://localhost:8000/geocode?address=${encodeURIComponent(
+          formData.address
+        )}`
+      );
       if (!geocodeResponse.ok) {
-        throw new Error('Erreur lors du géocodage')
+        throw new Error("Erreur lors du géocodage");
       }
-      const { latitude, longitude } = await geocodeResponse.json()
-      
+      const { latitude, longitude } = await geocodeResponse.json();
+
       // Mettre à jour les coordonnées
-      setFormData(prev => ({ ...prev, latitude, longitude }))
-      
+      setFormData((prev) => ({ ...prev, latitude, longitude }));
+
       // Rediriger vers la page de résultats avec les données
-      router.push(`/results?propertyData=${encodeURIComponent(JSON.stringify({
-        ...formData,
-        latitude,
-        longitude
-      }))}`)
+      router.push(
+        `/results?propertyData=${encodeURIComponent(
+          JSON.stringify({
+            ...formData,
+            latitude,
+            longitude,
+          })
+        )}`
+      );
     } catch (err) {
-      console.error('Erreur:', err)
-      setIsLoading(false)
+      console.error("Erreur:", err);
+      setIsLoading(false);
     }
-  }
+  };
 
   const updateFormData = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -87,7 +109,10 @@ export default function EstimatePage() {
       <div className="bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2 text-white hover:text-white/80 transition-colors">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 text-white hover:text-white/80 transition-colors"
+            >
               <ArrowLeft className="h-5 w-5" />
               <span>Retour</span>
             </Link>
@@ -107,7 +132,9 @@ export default function EstimatePage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-white/80 text-sm">Progression</span>
-            <span className="text-white/80 text-sm">{Math.round(progress)}%</span>
+            <span className="text-white/80 text-sm">
+              {Math.round(progress)}%
+            </span>
           </div>
           <Progress value={progress} className="h-2 bg-white/20" />
         </div>
@@ -116,8 +143,12 @@ export default function EstimatePage() {
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              <h3 className="text-2xl font-semibold text-white mb-2">Analyse en cours...</h3>
-              <p className="text-white/70">Notre IA analyse votre bien et les données du marché</p>
+              <h3 className="text-2xl font-semibold text-white mb-2">
+                Analyse en cours...
+              </h3>
+              <p className="text-white/70">
+                Notre IA analyse votre bien et les données du marché
+              </p>
             </div>
           ) : (
             <>
@@ -128,41 +159,54 @@ export default function EstimatePage() {
                     <div className="bg-gradient-to-r from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <MapPin className="h-8 w-8 text-white" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Localisation</h2>
-                    <p className="text-white/70">Où se situe votre bien immobilier ?</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      Localisation
+                    </h2>
+                    <p className="text-white/70">
+                      Où se situe votre bien immobilier ?
+                    </p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="address" className="text-white mb-2 block">
+                      <Label
+                        htmlFor="address"
+                        className="text-white mb-2 block"
+                      >
                         Quartier
                       </Label>
                       <Input
                         id="address"
                         placeholder="Ex: Analakely"
                         value={formData.address}
-                        onChange={(e) => updateFormData("address", e.target.value)}
+                        onChange={(e) =>
+                          updateFormData("address", e.target.value)
+                        }
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="propertyType" className="text-white mb-2 block">
+                      <Label
+                        htmlFor="propertyType"
+                        className="text-white mb-2 block"
+                      >
                         Type de bien
                       </Label>
                       <Select
                         value={formData.propertyType}
-                        onValueChange={(value) => updateFormData("propertyType", value)}
+                        onValueChange={(value) =>
+                          updateFormData("propertyType", value)
+                        }
                       >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Sélectionnez le type de bien" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="apartment">Appartement</SelectItem>
+                          <SelectItem value="apartment" disabled>
+                            Appartement (indisponible)
+                          </SelectItem>
                           <SelectItem value="house">Maison</SelectItem>
-                          <SelectItem value="studio">Studio</SelectItem>
-                          <SelectItem value="loft">Loft</SelectItem>
-                          <SelectItem value="duplex">Duplex</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -177,96 +221,160 @@ export default function EstimatePage() {
                     <div className="bg-gradient-to-r from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Ruler className="h-8 w-8 text-white" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Caractéristiques</h2>
-                    <p className="text-white/70">Décrivez les principales caractéristiques de votre bien</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      Caractéristiques
+                    </h2>
+                    <p className="text-white/70">
+                      Décrivez les principales caractéristiques de votre bien
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Surface */}
                     <div>
-                      <Label className="text-white mb-4 block">Surface habitable: {formData.surface[0]} m²</Label>
+                      <Label className="text-white mb-4 block">
+                        Surface habitable: {formData.surface[0]} m²
+                      </Label>
                       <Slider
                         value={formData.surface}
-                        onValueChange={(value) => updateFormData("surface", value)}
-                        max={500}
+                        onValueChange={(value) =>
+                          updateFormData("surface", value)
+                        }
+                        max={formData.propertyType === "house" ? 500 : 200}
                         min={10}
                         step={5}
                         className="mb-4"
                       />
                     </div>
 
+                    {/* Nombre de pièces */}
                     <div>
                       <Label htmlFor="rooms" className="text-white mb-2 block">
                         Nombre de pièces
                       </Label>
-                      <Select value={formData.rooms} onValueChange={(value) => updateFormData("rooms", value)}>
+                      <Select
+                        value={formData.rooms}
+                        onValueChange={(value) => {
+                          updateFormData("rooms", value);
+                          // Si le nombre de pièces est inférieur au nombre de chambres, ajuster
+                          if (
+                            parseInt(value) < parseInt(formData.bedrooms || 0)
+                          ) {
+                            updateFormData("bedrooms", value);
+                          }
+                        }}
+                      >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Sélectionnez" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1 pièce</SelectItem>
-                          <SelectItem value="2">2 pièces</SelectItem>
-                          <SelectItem value="3">3 pièces</SelectItem>
-                          <SelectItem value="4">4 pièces</SelectItem>
-                          <SelectItem value="5">5 pièces</SelectItem>
-                          <SelectItem value="6+">6+ pièces</SelectItem>
+                          {[1, 2, 3, 4, 5, 6].map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num} {num > 1 ? "pièces" : "pièce"}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="7+">7+ pièces</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
+                    {/* Chambres */}
                     <div>
-                      <Label htmlFor="rooms" className="text-white mb-2 block">
-                        Nombre d'étages
-                      </Label>
-                      <Select value={formData.floor} onValueChange={(value) => updateFormData("floor", value)}>
-                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                          <SelectValue placeholder="Sélectionnez" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4">4</SelectItem>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="6+">6+ </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="bedrooms" className="text-white mb-2 block">
+                      <Label
+                        htmlFor="bedrooms"
+                        className="text-white mb-2 block"
+                      >
                         Chambres
                       </Label>
-                      <Select value={formData.bedrooms} onValueChange={(value) => updateFormData("bedrooms", value)}>
+                      <Select
+                        value={formData.bedrooms}
+                        onValueChange={(value) =>
+                          updateFormData("bedrooms", value)
+                        }
+                        disabled={!formData.rooms}
+                      >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                          <SelectValue placeholder="Nombre de chambres" />
+                          <SelectValue
+                            placeholder={
+                              formData.rooms
+                                ? "Sélectionnez"
+                                : "Choisissez d'abord le nombre de pièces"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="0">0</SelectItem>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4">4</SelectItem>
-                          <SelectItem value="5+">5+</SelectItem>
+                          {Array.from(
+                            { length: parseInt(formData.rooms || 1) },
+                            (_, i) => (
+                              <SelectItem key={i} value={i.toString()}>
+                                {i} {i > 1 ? "chambres" : "chambre"}
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
 
+                    {/* Salles de bain */}
                     <div>
-                      <Label htmlFor="bathrooms" className="text-white mb-2 block">
+                      <Label
+                        htmlFor="bathrooms"
+                        className="text-white mb-2 block"
+                      >
                         Salles de bain
                       </Label>
-                      <Select value={formData.bathrooms} onValueChange={(value) => updateFormData("bathrooms", value)}>
+                      <Select
+                        value={formData.bathrooms}
+                        onValueChange={(value) =>
+                          updateFormData("bathrooms", value)
+                        }
+                      >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Nombre de SDB" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4+">4+</SelectItem>
+                          {[1, 2, 3, 4].map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num}{" "}
+                              {num > 1 ? "salles de bain" : "salle de bain"}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="5+">5+ salles de bain</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Nombre d'étages (seulement pour les maisons) */}
+                    {formData.propertyType === "house" && (
+                      <div>
+                        <Label
+                          htmlFor="floors"
+                          className="text-white mb-2 block"
+                        >
+                          Nombre d'étages
+                        </Label>
+                        <Select
+                          value={formData.floor}
+                          onValueChange={(value) =>
+                            updateFormData("floor", value)
+                          }
+                        >
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectValue placeholder="Sélectionnez" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">
+                              Rez-de-chaussée (0 étage)
+                            </SelectItem>
+                            <SelectItem value="1">1 étage</SelectItem>
+                            <SelectItem value="2">2 étages</SelectItem>
+                            <SelectItem value="3">3 étages</SelectItem>
+                            <SelectItem value="4">4 étages</SelectItem>
+                            <SelectItem value="5+">5+ étages</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -278,13 +386,19 @@ export default function EstimatePage() {
                     <div className="bg-gradient-to-r from-green-500 to-emerald-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Building className="h-8 w-8 text-white" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Détails du bien</h2>
-                    <p className="text-white/70">Informations complémentaires pour affiner l'estimation</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      Détails du bien
+                    </h2>
+                    <p className="text-white/70">
+                      Informations complémentaires pour affiner l'estimation
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <Label className="text-white mb-4 block">Année de construction: {formData.year[0]}</Label>
+                      <Label className="text-white mb-4 block">
+                        Année de construction: {formData.year[0]}
+                      </Label>
                       <Slider
                         value={formData.year}
                         onValueChange={(value) => updateFormData("year", value)}
@@ -296,10 +410,18 @@ export default function EstimatePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="condition" className="text-white mb-2 block">
+                      <Label
+                        htmlFor="condition"
+                        className="text-white mb-2 block"
+                      >
                         État du bien
                       </Label>
-                      <Select value={formData.condition} onValueChange={(value) => updateFormData("condition", value)}>
+                      <Select
+                        value={formData.condition}
+                        onValueChange={(value) =>
+                          updateFormData("condition", value)
+                        }
+                      >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="État général" />
                         </SelectTrigger>
@@ -313,10 +435,18 @@ export default function EstimatePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="parking" className="text-white mb-2 block">
+                      <Label
+                        htmlFor="parking"
+                        className="text-white mb-2 block"
+                      >
                         Parking
                       </Label>
-                      <Select value={formData.parking} onValueChange={(value) => updateFormData("parking", value)}>
+                      <Select
+                        value={formData.parking}
+                        onValueChange={(value) =>
+                          updateFormData("parking", value)
+                        }
+                      >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Type de parking" />
                         </SelectTrigger>
@@ -333,7 +463,12 @@ export default function EstimatePage() {
                       <Label htmlFor="garden" className="text-white mb-2 block">
                         Extérieur
                       </Label>
-                      <Select value={formData.garden} onValueChange={(value) => updateFormData("garden", value)}>
+                      <Select
+                        value={formData.garden}
+                        onValueChange={(value) =>
+                          updateFormData("garden", value)
+                        }
+                      >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Espace extérieur" />
                         </SelectTrigger>
@@ -356,47 +491,68 @@ export default function EstimatePage() {
                     <div className="bg-gradient-to-r from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Sparkles className="h-8 w-8 text-white" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Récapitulatif</h2>
-                    <p className="text-white/70">Vérifiez les informations avant de lancer l'estimation</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      Récapitulatif
+                    </h2>
+                    <p className="text-white/70">
+                      Vérifiez les informations avant de lancer l'estimation
+                    </p>
                   </div>
 
                   <div className="bg-white/5 rounded-lg p-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <span className="text-white/60">Adresse:</span>
-                        <p className="text-white font-medium">{formData.address || "Non renseigné"}</p>
+                        <p className="text-white font-medium">
+                          {formData.address || "Non renseigné"}
+                        </p>
                       </div>
                       <div>
                         <span className="text-white/60">Type:</span>
-                        <p className="text-white font-medium">{formData.propertyType || "Non renseigné"}</p>
+                        <p className="text-white font-medium">
+                          {formData.propertyType || "Non renseigné"}
+                        </p>
                       </div>
                       <div>
                         <span className="text-white/60">Surface:</span>
-                        <p className="text-white font-medium">{formData.surface[0]} m²</p>
+                        <p className="text-white font-medium">
+                          {formData.surface[0]} m²
+                        </p>
                       </div>
                       <div>
                         <span className="text-white/60">Pièces:</span>
-                        <p className="text-white font-medium">{formData.rooms || "Non renseigné"}</p>
+                        <p className="text-white font-medium">
+                          {formData.rooms || "Non renseigné"}
+                        </p>
                       </div>
                       <div>
                         <span className="text-white/60">Etages:</span>
-                        <p className="text-white font-medium">{formData.floor || "Non renseigné"}</p>
+                        <p className="text-white font-medium">
+                          {formData.floor || "Non renseigné"}
+                        </p>
                       </div>
                       <div>
                         <span className="text-white/60">Année:</span>
-                        <p className="text-white font-medium">{formData.year[0]}</p>
+                        <p className="text-white font-medium">
+                          {formData.year[0]}
+                        </p>
                       </div>
                       <div>
                         <span className="text-white/60">État:</span>
-                        <p className="text-white font-medium">{formData.condition || "Non renseigné"}</p>
+                        <p className="text-white font-medium">
+                          {formData.condition || "Non renseigné"}
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg p-6 text-center">
-                    <h3 className="text-xl font-semibold text-white mb-2">Prêt pour l'estimation ?</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      Prêt pour l'estimation ?
+                    </h3>
                     <p className="text-white/70">
-                      Notre IA va analyser votre bien et vous fournir une estimation précise
+                      Notre IA va analyser votre bien et vous fournir une
+                      estimation précise
                     </p>
                   </div>
                 </div>
@@ -418,7 +574,9 @@ export default function EstimatePage() {
                   onClick={handleNext}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                 >
-                  {currentStep === totalSteps ? "Lancer l'estimation" : "Suivant"}
+                  {currentStep === totalSteps
+                    ? "Lancer l'estimation"
+                    : "Suivant"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -427,5 +585,5 @@ export default function EstimatePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
